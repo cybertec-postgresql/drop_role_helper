@@ -1,0 +1,91 @@
+CREATE ROLE "space user";
+
+SET search_path = pg_catalog,pg_temp;
+
+CREATE EXTENSION drop_role_helper SCHEMA public;
+
+-- schema
+CREATE SCHEMA "space schema";
+GRANT CREATE, USAGE ON SCHEMA "space schema" TO "space user";
+
+-- table
+CREATE TABLE "space schema"."space table" (
+   id bigint PRIMARY KEY,
+   data text NOT NULL
+);
+GRANT SELECT, REFERENCES ON TABLE "space schema"."space table" TO "space user";
+
+-- columns
+CREATE TABLE public.coltable (
+   id bigserial PRIMARY KEY,
+   "space column" inet
+);
+GRANT INSERT, SELECT ("space column") ON public.coltable TO "space user";
+GRANT SELECT (id) ON public.coltable TO "space user";
+
+-- sequence
+CREATE SEQUENCE "space schema"."space sequence" CACHE 20;
+GRANT SELECT, USAGE ON SEQUENCE "space schema"."space sequence" TO "space user";
+
+-- function
+CREATE FUNCTION "space schema"."space function"() RETURNS integer
+   LANGUAGE sql AS 'SELECT 42';
+REVOKE EXECUTE ON FUNCTION "space schema"."space function"() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION "space schema"."space function"() TO "space user";
+
+-- procedure
+CREATE PROCEDURE "space schema"."space proc"()
+   LANGUAGE plpgsql AS 'BEGIN NULL; END;';
+GRANT EXECUTE ON PROCEDURE "space schema"."space proc"() TO "space user";
+
+-- aggregate function
+CREATE AGGREGATE "space schema"."space agg"(integer) (
+   SFUNC = pg_catalog.int4_sum,
+   STYPE = pg_catalog.int8
+);
+GRANT EXECUTE ON FUNCTION "space schema"."space agg"(integer) TO "space user";
+
+-- large object
+SELECT lo_create(99999);
+GRANT SELECT, UPDATE ON LARGE OBJECT 99999 TO "space user";
+
+-- type
+CREATE TYPE "space schema"."space enum" AS ENUM ('one', 'two');
+REVOKE USAGE ON TYPE "space schema"."space enum" FROM PUBLIC;
+GRANT USAGE ON TYPE "space schema"."space enum" TO "space user";
+
+-- database
+GRANT CREATE ON DATABASE postgres TO "space user";
+
+-- language
+CREATE TRUSTED LANGUAGE "space language" HANDLER plpgsql_call_handler VALIDATOR plpgsql_validator;
+GRANT USAGE ON LANGUAGE "space language" TO "space user";
+
+-- foreign data wrapper
+CREATE FOREIGN DATA WRAPPER "space wrapper" NO HANDLER NO VALIDATOR;
+GRANT USAGE ON FOREIGN DATA WRAPPER "space wrapper" TO "space user";
+
+-- foreign server
+CREATE SERVER "space server" FOREIGN DATA WRAPPER "space wrapper";
+GRANT USAGE ON FOREIGN SERVER "space server" TO "space user";
+
+-- tablespace
+GRANT CREATE ON TABLESPACE pg_default TO "space user";
+
+-- default privileges
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT EXECUTE ON FUNCTIONS TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA "space schema" GRANT EXECUTE ON FUNCTIONS TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT SELECT, DELETE ON TABLES TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA "space schema" GRANT SELECT, UPDATE ON TABLES TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT USAGE, CREATE ON SCHEMAS TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT USAGE, SELECT ON SEQUENCES TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA "space schema" GRANT USAGE, SELECT ON SEQUENCES TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres GRANT USAGE ON TYPES TO "space user";
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA "space schema" GRANT USAGE ON TYPES TO "space user";
+
+-- revoke privileges
+SELECT * FROM public.drop_role_helper('"space user"') \gexec
+
+-- drop role
+DROP ROLE "space user";

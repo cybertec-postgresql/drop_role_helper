@@ -1,0 +1,4 @@
+comment = 'generate SQL to revoke all privileges of a role in the current database'
+default_version = 1.0
+superuser = false
+relocatable = true
