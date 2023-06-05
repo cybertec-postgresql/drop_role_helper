@@ -63,7 +63,8 @@ Support
 -------
 
 Please report problems by creating a [Github issue][1].  
-Commercial support is available from [Cybertec][2].
+Commercial support is available from
+[CYBERTEC PostgreSQL International GmbH][2].
 
 
   [1]: https://github.com/cybertec-postgresql/drop_role_helper/issues
